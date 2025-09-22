@@ -1,0 +1,104 @@
+'use client';
+
+import { useState } from 'react';
+import { ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { mockTransactions } from '@/lib/mock-data';
+import { Button } from '../ui/button';
+import { CardFooter } from '../ui/card';
+
+const TRANSACTIONS_PER_PAGE = 5;
+
+export default function TransactionTable() {
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(mockTransactions.length / TRANSACTIONS_PER_PAGE);
+
+    const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE;
+    const endIndex = startIndex + TRANSACTIONS_PER_PAGE;
+    const currentTransactions = mockTransactions.slice(startIndex, endIndex);
+
+    const handlePrevPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    }
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    }
+
+  const getTypeBadgeVariant = (type: string) => {
+    switch(type) {
+      case 'Swap': return 'default';
+      case 'Transfer': return 'secondary';
+      case 'Stake': return 'outline';
+      case 'Approve': return 'destructive';
+      default: return 'outline';
+    }
+  }
+
+  return (
+    <>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Type</TableHead>
+            <TableHead>Details</TableHead>
+            <TableHead className='hidden md:table-cell'>Date</TableHead>
+            <TableHead className='hidden sm:table-cell text-right'>Value</TableHead>
+            <TableHead className="text-right">Tx</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentTransactions.map((tx) => (
+            <TableRow key={tx.hash}>
+              <TableCell>
+                <Badge variant={getTypeBadgeVariant(tx.type)}>{tx.type}</Badge>
+              </TableCell>
+              <TableCell>
+                <div className="font-medium">{tx.details}</div>
+                <div className="text-sm text-muted-foreground">Gas: ${tx.gasFee.toFixed(2)}</div>
+              </TableCell>
+              <TableCell className='hidden md:table-cell'>
+                {new Date(tx.timestamp).toLocaleString()}
+              </TableCell>
+              <TableCell className='hidden sm:table-cell text-right'>
+                ${tx.value.toLocaleString()}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="icon" asChild>
+                  <a href="#" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+    <CardFooter className="flex items-center justify-between px-0 pt-4">
+        <div className="text-xs text-muted-foreground">
+            Page {currentPage} of {totalPages}
+        </div>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 1}>
+                <ChevronLeft className='h-4 w-4 mr-1' />
+                Previous
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
+                Next
+                <ChevronRight className='h-4 w-4 ml-1' />
+            </Button>
+        </div>
+    </CardFooter>
+    </>
+  );
+}
